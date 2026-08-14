@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2M Core Operations - Solutions Telecom & IT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-blue: #00d4ff;
+            --deep-blue: #0066cc;
+            --dark-bg: #0a0e17;
+            --darker-bg: #050810;
+            --glass-bg: rgba(10, 14, 23, 0.8);
+            --text-light: #e6f7ff;
+            --text-muted: #8a9bb8;
+            --gradient-1: linear-gradient(135deg, #00d4ff 0%, #0066cc 100%);
+            --gradient-2: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--darker-bg);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        /* Arabic font override */
+        html[lang="ar"] body {
+            font-family: 'Segoe UI', 'Tahoma', 'Arabic Typesetting', sans-serif;
+        }
+        html[lang="ru"] body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        h1, h2, h3, .brand-font { font-family: 'Orbitron', sans-serif; }
+        html[lang="ar"] h1,
+        html[lang="ar"] h2,
+        html[lang="ar"] h3 {
+            font-family: 'Segoe UI', 'Tahoma', sans-serif;
+            font-weight: 700;
+        }
+
+        /* ===== LANGUAGE SWITCHER ===== */
+        .lang-switcher {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+        .lang-btn {
+            padding: 0.3rem 0.7rem;
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+        }
+        .lang-btn:hover { background: rgba(0, 212, 255, 0.15); color: var(--primary-blue); }
+        .lang-btn.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-animation {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1; background: var(--darker-bg); overflow: hidden;
+        }
+        .bg-animation::before {
+            content: ''; position: absolute;
+            top: -5%; left: -5%; width: 110%; height: 110%;
+            background: url('../Capture.JPG') no-repeat center center;
+            background-size: cover;
+            opacity: 0.45;
+            z-index: 0;
+            animation: slowZoom 10s infinite alternate ease-in-out;
+            filter: brightness(1.4) contrast(1.15) saturate(1.2);
+            image-rendering: -webkit-optimize-contrast;
+        }
+        .bg-animation::after {
+            content: ''; position: absolute;
+            top: -20%; left: -20%; width: 140%; height: 140%;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.08) 0%, transparent 50%);
+            z-index: 0; animation: dynamicLight 6s infinite alternate ease-in-out;
+            pointer-events: none; mix-blend-mode: screen;
+        }
+        @keyframes slowZoom {
+            0%   { transform: scale(1)    translate(0, 0);       opacity: 0.45; }
+            50%  { transform: scale(1.08) translate(-2%, 1%);    opacity: 0.58; }
+            100% { transform: scale(1.12) translate(-3%, -2%);   opacity: 0.50; }
+        }
+        @keyframes dynamicLight {
+            0%   { transform: translate(0, 0) scale(1);       opacity: 0.7; }
+            50%  { transform: translate(8%, 4%) scale(1.2);   opacity: 1.0; }
+            100% { transform: translate(-4%, 6%) scale(1.05); opacity: 0.7; }
+        }
+
+        /* ===== GLOBE ===== */
+        .globe-container {
+            position: absolute; top: 50%; left: 60%;
+            transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            opacity: 0.5; pointer-events: none; filter: blur(0.5px);
+        }
+        .globe {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 212, 255, 0.15), transparent 60%), rgba(5, 8, 16, 0.95);
+            animation: globeGlow 4s ease-in-out infinite, globeFloat 6s ease-in-out infinite;
+            box-shadow: inset 0 0 50px rgba(0, 212, 255, 0.6), inset -20px -20px 80px rgba(0, 0, 0, 0.9), 0 0 100px rgba(0, 212, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.1) inset;
+            position: relative; border: 2px solid rgba(0, 212, 255, 0.5);
+        }
+        .globe-inner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; z-index: 1; }
+        .globe-mesh {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: linear-gradient(rgba(0, 212, 255, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.4) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(600px) rotateX(60deg) rotateZ(0deg);
+            animation: meshSpin 20s linear infinite;
+        }
+        .globe-core {
+            position: absolute; top: 50%; left: 50%; width: 60%; height: 60%;
+            transform: translate(-50%, -50%); border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.2) 0%, transparent 70%);
+            box-shadow: 0 0 80px rgba(0, 212, 255, 0.4);
+            animation: corePulse 4s ease-in-out infinite alternate; z-index: 2;
+        }
+        .fiber-node {
+            position: absolute; width: 6px; height: 6px; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px var(--primary-blue); z-index: 3;
+            animation: nodePulse 2s infinite alternate;
+        }
+        @keyframes meshSpin {
+            0% { transform: perspective(600px) rotateX(60deg) rotateZ(0deg) translateY(0); }
+            100% { transform: perspective(600px) rotateX(60deg) rotateZ(360deg) translateY(50px); }
+        }
+        @keyframes corePulse {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+        }
+        @keyframes nodePulse {
+            0% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 10px #fff; }
+            100% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 20px #fff, 0 0 40px var(--primary-blue); }
+        }
+        .globe::before {
+            content: ''; position: absolute; top: -15px; left: -15px; right: -15px; bottom: -15px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.2) 0%, rgba(0, 212, 255, 0.1) 40%, transparent 70%);
+            animation: atmosphereGlow 4s ease-in-out infinite; pointer-events: none; z-index: -1;
+        }
+        .globe::after {
+            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.1) 45deg, transparent 90deg, rgba(0,212,255,0.1) 135deg, transparent 180deg, rgba(255,255,255,0.05) 225deg, transparent 270deg, rgba(0,212,255,0.05) 315deg, transparent 360deg);
+            animation: lightReflection 8s linear infinite; pointer-events: none;
+        }
+        .globe-flash {
+            position: absolute; width: 14px; height: 14px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(0,212,255,0.6) 35%, transparent 70%);
+            opacity: 0; pointer-events: none; filter: blur(1px);
+            animation: flashPulse 5s infinite ease-in-out; mix-blend-mode: screen;
+        }
+        .globe-flash:nth-child(1) { top: 20%; left: 30%; animation-delay: 0.2s; }
+        .globe-flash:nth-child(2) { top: 30%; left: 65%; animation-delay: 1.4s; }
+        .globe-flash:nth-child(3) { top: 50%; left: 45%; animation-delay: 2.8s; }
+        .globe-flash:nth-child(4) { top: 70%; left: 55%; animation-delay: 0.9s; }
+        .globe-flash:nth-child(5) { top: 40%; left: 25%; animation-delay: 3.5s; }
+        .globe-flash:nth-child(6) { top: 65%; left: 75%; animation-delay: 2.0s; }
+        @keyframes flashPulse {
+            0%, 20%, 100% { opacity: 0; transform: scale(0.8); }
+            30%, 40% { opacity: 1; transform: scale(1.2); }
+            60% { opacity: 0.5; transform: scale(1); }
+        }
+        @keyframes atmosphereGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.08); }
+        }
+        @keyframes lightReflection {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .satellite {
+            position: absolute; width: 8px; height: 8px; background: var(--primary-blue);
+            border-radius: 50%; box-shadow: 0 0 15px var(--primary-blue); animation: orbit 20s linear infinite;
+        }
+        .satellite:nth-child(1) { top: 50%; left: 50%; margin: -4px 0 0 -4px; animation-delay: 0s; }
+        .satellite:nth-child(2) { top: 50%; left: 50%; margin: -4px 0 0 -4px; animation-delay: 5s; }
+        .satellite:nth-child(3) { top: 50%; left: 50%; margin: -4px 0 0 -4px; animation-delay: 10s; }
+        .satellite:nth-child(4) { top: 50%; left: 50%; margin: -4px 0 0 -4px; animation-delay: 15s; }
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(320px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(320px) rotate(-360deg); }
+        }
+        @keyframes globeGlow {
+            0%, 100% { box-shadow: 0 0 150px rgba(0,212,255,0.8), inset 0 0 80px rgba(0,212,255,0.3), 0 0 250px rgba(0,212,255,0.3), 0 0 50px rgba(255,255,255,0.1) inset; }
+            50% { box-shadow: 0 0 200px rgba(0,212,255,1.0), inset 0 0 100px rgba(0,212,255,0.5), 0 0 350px rgba(0,212,255,0.5), 0 0 70px rgba(255,255,255,0.2) inset; }
+        }
+        @keyframes globeFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .tdm-cable {
+            position: absolute; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+            opacity: 0.9; animation: cablePulse 3s infinite ease-in-out, cableShine 2s infinite linear;
+            box-shadow: 0 0 15px var(--primary-blue); transform-origin: 0 50%;
+            overflow: hidden; border-radius: 2px;
+        }
+        .tdm-line1 { width: 14vw; top: 42%; left: 49%; transform: rotate(-75deg); }
+        .tdm-line2 { width: 26vw; top: 42%; left: 49%; transform: rotate(190deg); }
+        .tdm-line4 { width: 32vw; top: 42%; left: 49%; transform: rotate(25deg); }
+        @keyframes cablePulse {
+            0%, 100% { opacity: 0.5; transform: scaleY(1); }
+            50% { opacity: 0.8; transform: scaleY(1.5); }
+        }
+        @keyframes cableShine {
+            0%, 100% { box-shadow: 0 0 10px var(--primary-blue); }
+            50% { box-shadow: 0 0 20px var(--primary-blue); }
+        }
+        .country-marker {
+            position: absolute; background: var(--primary-blue); border-radius: 50%;
+            box-shadow: 0 0 20px var(--primary-blue); animation: markerGlow 4s infinite ease-in-out; z-index: 2;
+        }
+        .marker-tunisia { top: 42%; left: 49%; width: 16px; height: 16px; background: #00ffcc; box-shadow: 0 0 30px #00ffcc; animation: tunisiaGlow 3s infinite ease-in-out, tunisiaPulse 5s infinite alternate; }
+        .marker-paris { top: 32%; left: 47%; width: 10px; height: 10px; animation-delay: 0.5s; }
+        .marker-london { top: 29%; left: 46%; width: 10px; height: 10px; animation-delay: 1.2s; }
+        .marker-new-york { top: 36%; left: 24%; width: 12px; height: 12px; animation-delay: 0.8s; }
+        .marker-tokyo { top: 38%; left: 83%; width: 12px; height: 12px; animation-delay: 1.5s; }
+        .marker-singapore { top: 56%; left: 77%; width: 10px; height: 10px; animation-delay: 2.0s; }
+        @keyframes tunisiaGlow {
+            0%, 100% { box-shadow: 0 0 30px #00ffcc, 0 0 50px rgba(0,255,204,0.4); transform: scale(1); }
+            50% { box-shadow: 0 0 60px #00ffcc, 0 0 90px #00ffcc; transform: scale(1.4); }
+        }
+        @keyframes tunisiaPulse { from { background: #fff; } to { background: #00ffcc; } }
+        @keyframes markerGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--primary-blue); transform: scale(1); }
+            50% { box-shadow: 0 0 40px var(--primary-blue), 0 0 60px var(--primary-blue); transform: scale(1.5); }
+        }
+        .city-label {
+            position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.9); font-size: 0.8rem; font-weight: 600;
+            letter-spacing: 1px; white-space: nowrap;
+            text-shadow: 0 0 8px rgba(0,212,255,1); pointer-events: none; font-family: inherit;
+        }
+        .marker-tunisia .city-label { font-size: 1rem; top: -28px; color: #00ffcc; text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 1.5rem 5%;
+            background: rgba(5, 8, 16, 0.9); backdrop-filter: blur(10px);
+            z-index: 1000; border-bottom: 1px solid rgba(0, 212, 255, 0.1); transition: all 0.3s ease;
+        }
+        nav.scrolled { padding: 1rem 5%; background: rgba(5, 8, 16, 0.98); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 1rem; text-decoration: none; color: var(--text-light); }
+        .logo-icon {
+            width: 50px; height: 50px; background: var(--gradient-1); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.5rem; box-shadow: 0 0 30px rgba(0,212,255,0.5); animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(0,212,255,0.5); }
+            50% { box-shadow: 0 0 50px rgba(0,212,255,0.8); }
+        }
+        .logo-text { font-size: 1.5rem; font-weight: 700; letter-spacing: 2px; }
+        .logo-text span { color: var(--primary-blue); }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a {
+            color: var(--text-muted); text-decoration: none; font-weight: 500;
+            transition: all 0.3s ease; position: relative; font-size: 0.9rem;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .nav-links a:hover { color: var(--primary-blue); }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -5px; left: 0; width: 0; height: 2px;
+            background: var(--primary-blue); transition: width 0.3s ease; box-shadow: 0 0 10px var(--primary-blue);
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .mobile-menu { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+        .mobile-menu span { width: 25px; height: 2px; background: var(--primary-blue); transition: all 0.3s ease; }
+
+        /* ===== HERO ===== */
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 8rem 5% 5rem; position: relative; overflow: hidden; }
+        .hero-content { max-width: 1400px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .hero-text h1 {
+            font-size: 4rem; font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-blue) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            filter: drop-shadow(0 0 30px rgba(0,212,255,0.9)) drop-shadow(0 2px 8px rgba(0,0,0,0.8));
+        }
+        .hero-text h1 span {
+            display: block; font-size: 1.5rem; font-weight: 400; color: var(--primary-blue);
+            -webkit-text-fill-color: var(--primary-blue); margin-top: 0.5rem;
+            letter-spacing: 3px; text-shadow: 0 0 15px rgba(0,212,255,0.4);
+        }
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: #ffffff;
+            font-weight: 500;
+            text-shadow: 0 2px 12px rgba(0,0,0,1), 0 0 30px rgba(0,0,0,0.95), 1px 1px 0px rgba(0,0,0,1);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            line-height: 1.8;
+            letter-spacing: 0.3px;
+        }
+        .hero-tags { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+        .tag {
+            padding: 0.5rem 1.5rem; background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 50px; font-size: 0.9rem; color: var(--primary-blue); font-weight: 600;
+            letter-spacing: 1px; transition: all 0.3s ease;
+        }
+        .tag:hover { background: rgba(0,212,255,0.2); transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,212,255,0.3); }
+        .cta-buttons { display: flex; gap: 1.5rem; }
+        .btn {
+            padding: 1rem 2.5rem; border: none; border-radius: 5px; font-weight: 600; font-size: 1rem;
+            cursor: pointer; transition: all 0.3s ease; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-family: 'Orbitron', sans-serif; letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: var(--gradient-1); color: white; box-shadow: 0 0 30px rgba(0,212,255,0.4);
+            position: relative; z-index: 1; overflow: hidden;
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s ease; z-index: -1;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 40px rgba(0,212,255,0.8), 0 0 20px #fff; }
+        .btn-secondary {
+            background: rgba(0,212,255,0.05); color: var(--primary-blue);
+            border: 2px solid var(--primary-blue); backdrop-filter: blur(5px);
+        }
+        .btn-secondary:hover { background: rgba(0,212,255,0.2); transform: translateY(-3px); box-shadow: 0 0 25px rgba(0,212,255,0.4); }
+        .hero-visual { position: relative; height: 500px; display: flex; align-items: center; justify-content: center; }
+        .network-graphic { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; perspective: 1000px; }
+        .orbit {
+            position: absolute; border: 1px solid rgba(0,212,255,0.2); border-radius: 50%; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotateX(65deg); transform-style: preserve-3d;
+            box-shadow: inset 0 0 30px rgba(0,212,255,0.05), 0 0 20px rgba(0,212,255,0.05);
+        }
+        .orbit:nth-child(1) { width: 220px; height: 220px; animation: rotate3d1 12s linear infinite; }
+        .orbit:nth-child(2) { width: 340px; height: 340px; animation: rotate3d2 18s linear infinite reverse; }
+        .orbit:nth-child(3) { width: 480px; height: 480px; animation: rotate3d3 24s linear infinite; }
+        @keyframes rotate3d1 { from { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(0deg); } to { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(360deg); } }
+        @keyframes rotate3d2 { from { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(0deg); } to { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(-360deg); } }
+        @keyframes rotate3d3 { from { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(0deg); } to { transform: translate(-50%, -50%) rotateX(65deg) rotateZ(360deg); } }
+        .node { position: absolute; width: 15px; height: 15px; background: #fff; border-radius: 50%; box-shadow: 0 0 15px #fff, 0 0 30px var(--primary-blue); top: -8px; left: 50%; transform: translateX(-50%); }
+        .center-node {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, var(--primary-blue), rgba(0,102,204,0.5) 60%, transparent 80%);
+            border: 1px solid rgba(0,212,255,0.4); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; text-shadow: 0 0 10px #fff; font-size: 2.2rem; font-weight: 900;
+            box-shadow: 0 0 60px rgba(0,212,255,0.6), inset 0 0 30px rgba(255,255,255,0.4);
+            animation: pulse3D 2s infinite alternate; backdrop-filter: blur(5px);
+        }
+        @keyframes pulse3D {
+            0% { transform: translate(-50%, -50%) scale(0.95); box-shadow: 0 0 40px rgba(0,212,255,0.4), inset 0 0 20px rgba(255,255,255,0.3); }
+            100% { transform: translate(-50%, -50%) scale(1.05); box-shadow: 0 0 100px rgba(0,212,255,0.9), inset 0 0 40px rgba(255,255,255,0.6); }
+        }
+
+        /* ===== ABOUT / TEAM ===== */
+        .about { padding: 6rem 5%; background: var(--dark-bg); position: relative; }
+        .about-container { max-width: 1400px; margin: 0 auto; }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; margin-bottom: 4rem; }
+        .team-card {
+            background: rgba(10,14,23,0.4); backdrop-filter: blur(16px); border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 20px; padding: 2.5rem 2rem; text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 0 20px rgba(0,212,255,0.02); position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        }
+        .team-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 3px; background: var(--gradient-1); transition: left 0.5s ease; }
+        .team-card:hover::before { left: 0; }
+        .team-card:hover { transform: translateY(-8px); border-color: rgba(0,212,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 50px rgba(0,212,255,0.1); }
+        .team-image-wrapper { position: relative; width: 140px; height: 140px; margin: 0 auto 2rem; border-radius: 50%; padding: 4px; background: var(--gradient-1); z-index: 1; }
+        .team-image-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 4px solid var(--darker-bg); transition: transform 0.5s ease; }
+        .team-card:hover .team-image-wrapper img { transform: scale(1.05); }
+        .team-image-glow {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 150%; height: 150%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%);
+            z-index: 0; pointer-events: none;
+        }
+        .team-info h3 { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+        .team-info .role { display: inline-block; color: var(--primary-blue); font-size: 0.9rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1rem; }
+        .team-info p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.7; }
+        .team-tags { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+        .team-tags span { padding: 0.3rem 0.8rem; background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); border-radius: 20px; font-size: 0.8rem; color: var(--primary-blue); }
+        .about-highlights { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; padding-top: 2rem; border-top: 1px solid rgba(0,212,255,0.1); }
+        .highlight-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 2rem; background: rgba(0,212,255,0.05); border-radius: 50px; border: 1px solid rgba(0,212,255,0.1); }
+        .highlight-icon { font-size: 1.5rem; }
+        .highlight-text { font-weight: 600; color: var(--text-light); }
+
+        /* ===== SERVICES ===== */
+        .services { padding: 6rem 5%; background: var(--darker-bg); }
+        .section-header { text-align: center; margin-bottom: 4rem; }
+        .section-header h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .section-header p { color: var(--text-muted); font-size: 1.1rem; max-width: 700px; margin: 0 auto; }
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 1400px; margin: 0 auto; }
+        .service-card {
+            background: rgba(10,14,23,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(0,212,255,0.1);
+            border-radius: 20px; padding: 2.5rem; transition: all 0.4s ease; position: relative; overflow: hidden;
+        }
+        .service-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--gradient-1); transform: scaleX(0); transition: transform 0.4s ease; transform-origin: left; }
+        .service-card:hover::before { transform: scaleX(1); }
+        .service-card:hover { transform: translateY(-5px); border-color: rgba(0,212,255,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(0,212,255,0.05); }
+        .service-icon { font-size: 2.5rem; margin-bottom: 1.5rem; display: block; }
+        .service-card h3 { font-size: 1.3rem; margin-bottom: 1rem; color: white; }
+        .service-card p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.7; }
+        .service-features { list-style: none; }
+        .service-features li { padding: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .service-features li::before { content: '▸'; color: var(--primary-blue); font-size: 0.8rem; flex-shrink: 0; }
+        .service-features li:last-child { border-bottom: none; }
+
+        /* ===== EXPERTISE ===== */
+        .expertise { padding: 6rem 5%; background: var(--dark-bg); }
+        .expertise-content { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+        .expertise-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .stat-card {
+            background: rgba(10,14,23,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(0,212,255,0.15);
+            border-radius: 20px; padding: 2rem; text-align: center;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .stat-card::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0,212,255,0.03) 0%, transparent 70%); pointer-events: none; }
+        .stat-card:hover { transform: translateY(-5px); border-color: rgba(0,212,255,0.4); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 30px rgba(0,212,255,0.1); }
+        .stat-number { display: block; font-size: 3.5rem; font-weight: 900; color: var(--primary-blue); font-family: 'Orbitron', sans-serif; text-shadow: 0 0 20px rgba(0,212,255,0.5); }
+        .stat-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; margin-top: 0.5rem; display: block; }
+        .expertise-text h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 2rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .expertise-text p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 1rem; line-height: 1.8; }
+        .tech-stack { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 2rem; }
+        .tech-badge { padding: 0.5rem 1.2rem; background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; color: var(--primary-blue); font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; }
+        .tech-badge:hover { background: rgba(0,212,255,0.15); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,212,255,0.2); }
+
+        /* ===== SOLUTIONS ===== */
+        .solutions { padding: 6rem 5%; background: var(--darker-bg); }
+        .solutions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; max-width: 1400px; margin: 0 auto; }
+        .solution-card {
+            background: rgba(10,14,23,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(0,212,255,0.1);
+            border-radius: 20px; padding: 2.5rem; transition: all 0.4s ease; position: relative;
+        }
+        .solution-card.featured { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 40px rgba(0,212,255,0.1); background: rgba(0,30,60,0.6); }
+        .solution-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 40px rgba(0,212,255,0.15); }
+        .solution-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .solution-icon { font-size: 2rem; }
+        .solution-header h3 { font-size: 1.4rem; color: white; }
+        .solution-card p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.7; }
+        .solution-list { list-style: none; }
+        .solution-list li { padding: 0.6rem 0; color: var(--text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .solution-list li::before { content: '✓'; color: var(--primary-blue); font-weight: 700; flex-shrink: 0; }
+        .solution-list li:last-child { border-bottom: none; }
+
+        /* ===== CONTACT / CAREERS ===== */
+        .contact { padding: 6rem 5%; background: var(--darker-bg); }
+        .contact-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+        .contact-info h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .contact-info > p { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.8; }
+        .contact-methods { display: flex; flex-direction: column; gap: 1.5rem; }
+        .contact-method { display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; background: rgba(10,14,23,0.5); border: 1px solid rgba(0,212,255,0.1); border-radius: 15px; text-decoration: none; transition: all 0.3s ease; }
+        .contact-method:hover { border-color: rgba(0,212,255,0.3); transform: translateX(5px); background: rgba(0,212,255,0.05); }
+        .contact-icon { font-size: 1.5rem; width: 50px; height: 50px; background: rgba(0,212,255,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,212,255,0.2); }
+        .contact-method div h4 { color: white; margin-bottom: 0.3rem; }
+        .contact-method div p { color: var(--text-muted); font-size: 0.9rem; }
+        .contact-form { background: rgba(10,14,23,0.5); backdrop-filter: blur(16px); border: 1px solid rgba(0,212,255,0.15); border-radius: 20px; padding: 3rem; box-shadow: 0 20px 50px rgba(0,0,0,0.3), inset 0 0 20px rgba(0,212,255,0.05); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-light); font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; color: white; font-family: inherit; transition: all 0.3s ease; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 20px rgba(0,212,255,0.1); }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+        .form-group select option { background: #0a0e17; color: white; }
+
+        /* ===== SUCCESS MODAL ===== */
+        .success-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,8,16,0.95); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+        .success-modal.active { opacity: 1; pointer-events: all; }
+        .success-content { background: linear-gradient(135deg, rgba(10,14,23,0.9) 0%, rgba(0,212,255,0.05) 100%); border: 1px solid rgba(0,212,255,0.3); border-radius: 20px; padding: 4rem 3rem; text-align: center; max-width: 500px; transform: scale(0.8) translateY(20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,212,255,0.1); }
+        .success-modal.active .success-content { transform: scale(1) translateY(0); }
+        .success-icon { width: 80px; height: 80px; background: var(--gradient-1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 2rem; color: white; box-shadow: 0 0 30px rgba(0,212,255,0.6); animation: successPulse 2s infinite ease-in-out; }
+        @keyframes successPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0,212,255,0.6); }
+            50% { transform: scale(1.1); box-shadow: 0 0 50px rgba(0,212,255,0.9); }
+        }
+        .success-content h3 { font-size: 2rem; color: white; margin-bottom: 1rem; font-family: 'Orbitron', sans-serif; }
+        .success-content p { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2.5rem; line-height: 1.6; }
+
+        /* ===== FOOTER ===== */
+        footer { background: var(--darker-bg); border-top: 1px solid rgba(0,212,255,0.1); padding: 3rem 5%; text-align: center; }
+        .footer-content { max-width: 1400px; margin: 0 auto; }
+        .footer-logo { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; font-family: 'Orbitron', sans-serif; }
+        .footer-logo span { color: var(--primary-blue); }
+        .footer-tagline { color: var(--text-muted); margin-bottom: 2rem; font-style: italic; }
+        .footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.3s ease; }
+        .footer-links a:hover { color: var(--primary-blue); }
+        .footer-bottom { color: var(--text-muted); font-size: 0.9rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        /* ===== ANIMATIONS ===== */
+        .fade-in { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-left: 10px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== RTL SUPPORT FOR ARABIC ===== */
+        html[lang="ar"] { direction: rtl; }
+        html[lang="ar"] .nav-container { flex-direction: row-reverse; }
+        html[lang="ar"] .nav-links { flex-direction: row-reverse; }
+        html[lang="ar"] .hero-content { direction: rtl; }
+        html[lang="ar"] .service-features li,
+        html[lang="ar"] .solution-list li { flex-direction: row-reverse; }
+        html[lang="ar"] .service-features li::before,
+        html[lang="ar"] .solution-list li::before { margin-right: 0; margin-left: 0.8rem; }
+        html[lang="ar"] .contact-method { flex-direction: row-reverse; }
+        html[lang="ar"] .contact-method:hover { transform: translateX(-5px); }
+        html[lang="ar"] .hero-text h1 span { letter-spacing: 1px; }
+        html[lang="ar"] .cta-buttons { flex-direction: row-reverse; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 968px) {
+            .hero-content, .expertise-content, .contact-container { grid-template-columns: 1fr; }
+            .hero-text h1 { font-size: 2.5rem; }
+            .nav-links { display: none; }
+            .mobile-menu { display: flex; }
+            .expertise-stats { order: 2; }
+            .hero-visual { height: 300px; }
+            .lang-switcher { gap: 0.2rem; }
+            .lang-btn { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+        }
+        @media (max-width: 640px) {
+            .hero-text h1 { font-size: 2rem; }
+            .cta-buttons { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+            .services-grid, .solutions-grid { grid-template-columns: 1fr; }
+            .team-info h3 { font-size: 1.3rem; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--darker-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--deep-blue); }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <div class="logo-icon">A2M</div>
+                <div class="logo-text">CORE <span>OPERATIONS</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#about" data-i18n="nav_about">About Us</a></li>
+                <li><a href="#services" data-i18n="nav_services">Services</a></li>
+                <li><a href="#expertise" data-i18n="nav_expertise">Expertise</a></li>
+                <li><a href="#solutions" data-i18n="nav_solutions">Solutions</a></li>
+                <li><a href="#careers" data-i18n="nav_careers">Careers</a></li>
+                <li><a href="#contact" data-i18n="nav_contact">Contact</a></li>
+            </ul>
+            <!-- Language Switcher -->
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="setLang('fr')">FR</button>
+                <button class="lang-btn" onclick="setLang('en')">EN</button>
+                <button class="lang-btn" onclick="setLang('ar')">عر</button>
+                <button class="lang-btn" onclick="setLang('ru')">RU</button>
+            </div>
+            <div class="mobile-menu" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text fade-in">
+                <h1>
+                    A2M CORE OPERATIONS
+                    <span>NETWORK • INTERCONNECT • PERFORMANCE</span>
+                </h1>
+                <p class="hero-subtitle" data-i18n="hero_subtitle">
+                    Expert en solutions telecom et IT, je transforme vos infrastructures réseau en atouts stratégiques.
+                    De la supervision à l'optimisation pricing, j'accompagne votre excellence opérationnelle.
+                </p>
+                <div class="hero-tags">
+                    <span class="tag">Network Operations</span>
+                    <span class="tag">Service Assurance</span>
+                    <span class="tag">Revenue Management</span>
+                    <span class="tag">SMS Services</span>
+                    <span class="tag">Voice Services</span>
+                    <span class="tag">Logistics</span>
+                    <span class="tag">Shipping</span>
+                    <span class="tag">Maritime</span>
+                </div>
+                <div class="cta-buttons">
+                    <a href="#solutions" class="btn btn-primary" data-i18n="hero_cta1">Découvrir les Solutions</a>
+                    <a href="#contact" class="btn btn-secondary" data-i18n="hero_cta2">Me Contacter</a>
+                </div>
+            </div>
+            <div class="hero-visual fade-in">
+                <div class="network-graphic">
+                    <div class="orbit"><div class="node"></div></div>
+                    <div class="orbit"><div class="node"></div></div>
+                    <div class="orbit"><div class="node"></div></div>
+                    <div class="center-node">A2M</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section class="about" id="about">
+        <div class="about-container">
+            <div class="section-header fade-in">
+                <h2 data-i18n="about_title">Our Team</h2>
+                <p data-i18n="about_subtitle">Meet the experts driving A2M Core Operations</p>
+            </div>
+            <div class="team-grid">
+                <div class="team-card fade-in">
+                    <div class="team-image-wrapper">
+                        <img src="../Imedpjn.png" alt="Imed Mrabet - Telecom Engineer">
+                        <div class="team-image-glow"></div>
+                    </div>
+                    <div class="team-info">
+                        <h3>Imed Mrabet</h3>
+                        <span class="role" data-i18n="team1_role">Head of Tech Operations</span>
+                        <p data-i18n="team1_desc">With 14+ years in Wholesale Telecom, Imed drives network operations, revenue assurance, and complex interconnect strategies.</p>
+                        <div class="team-tags">
+                            <span data-i18n="team1_tag1">Operations</span>
+                            <span data-i18n="team1_tag2">Strategy</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="team-card fade-in" style="transition-delay: 0.1s;">
+                    <div class="team-image-wrapper">
+                        <img src="../femme.jpg" alt="Rana Abderrahim">
+                        <div class="team-image-glow"></div>
+                    </div>
+                    <div class="team-info">
+                        <h3>Rana Abderrahim</h3>
+                        <span class="role" data-i18n="team2_role">Directeur RH et Achat</span>
+                        <p data-i18n="team2_desc">Responsable des opérations administratives, des achats stratégiques, de la coordination logistique et du support maritime.</p>
+                        <div class="team-tags">
+                            <span data-i18n="team2_tag1">Ressources Humaines</span>
+                            <span data-i18n="team2_tag2">Achats</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="team-card fade-in" style="transition-delay: 0.2s;">
+                    <div class="team-image-wrapper">
+                        <img src="https://ui-avatars.com/api/?name=Amir+Adam&background=0a0e17&color=00d4ff&size=300" alt="Amir Adam">
+                        <div class="team-image-glow"></div>
+                    </div>
+                    <div class="team-info">
+                        <h3>Ahmed HASSINE</h3>
+                        <span class="role" data-i18n="team3_role">To be soon operational</span>
+                        <p data-i18n="team3_desc">Next Generation inchallah</p>
+                        <div class="team-tags">
+                            <span data-i18n="team3_tag1">First 1</span>
+                            <span data-i18n="team3_tag2">Second 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="about-highlights fade-in">
+                <div class="highlight-item"><div class="highlight-icon">🌐</div><span class="highlight-text" data-i18n="highlight1">International Wholesale</span></div>
+                <div class="highlight-item"><div class="highlight-icon">📊</div><span class="highlight-text" data-i18n="highlight2">Revenue Assurance</span></div>
+                <div class="highlight-item"><div class="highlight-icon">🔧</div><span class="highlight-text" data-i18n="highlight3">Network Operations</span></div>
+                <div class="highlight-item"><div class="highlight-icon">💡</div><span class="highlight-text" data-i18n="highlight4">Innovation & Config</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="section-header fade-in">
+            <h2 data-i18n="services_title">Domaines d'Expertise</h2>
+            <p data-i18n="services_subtitle">Une approche globale des opérations telecom combinant expertise technique et vision business</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card fade-in">
+                <span class="service-icon">📡</span>
+                <h3>Network Operations</h3>
+                <p data-i18n="svc1_desc">Gestion et optimisation des infrastructures réseau pour garantir disponibilité et performance maximale.</p>
+                <ul class="service-features">
+                    <li data-i18n="svc1_f1">Supervision réseau 24/7</li>
+                    <li data-i18n="svc1_f2">Gestion des incidents NOC</li>
+                    <li data-i18n="svc1_f3">Optimisation des flux</li>
+                    <li data-i18n="svc1_f4">Interconnexion internationale</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">🎫</span>
+                <h3>Ticketing & Support</h3>
+                <p data-i18n="svc2_desc">Systèmes de gestion d'incidents et support client optimisés pour une résolution rapide et efficace.</p>
+                <ul class="service-features">
+                    <li data-i18n="svc2_f1">Implémentation ITSM</li>
+                    <li data-i18n="svc2_f2">Automatisation des workflows</li>
+                    <li>SLA Management</li>
+                    <li data-i18n="svc2_f4">Reporting et analytics</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">💰</span>
+                <h3>Pricing & Revenue</h3>
+                <p data-i18n="svc3_desc">Stratégies tarifaires et optimisation du revenu pour maximiser la rentabilité de vos services telecom.</p>
+                <ul class="service-features">
+                    <li data-i18n="svc3_f1">Analyse de rentabilité</li>
+                    <li data-i18n="svc3_f2">Modélisation tarifaire</li>
+                    <li data-i18n="svc3_f3">Benchmarking marché</li>
+                    <li data-i18n="svc3_f4">Optimisation interconnect</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">📊</span>
+                <h3>Monitoring & Analytics</h3>
+                <p data-i18n="svc4_desc">Surveillance en temps réel et analyse prédictive pour anticiper les problèmes avant qu'ils n'impactent.</p>
+                <ul class="service-features">
+                    <li data-i18n="svc4_f1">Dashboards temps réel</li>
+                    <li data-i18n="svc4_f2">Alerting intelligent</li>
+                    <li>Capacity planning</li>
+                    <li>Performance analytics</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">☎️</span>
+                <h3>VoIP & Communications</h3>
+                <p data-i18n="svc5_desc">Solutions de téléphonie IP et services de messagerie unifiée pour une communication fluide et moderne.</p>
+                <ul class="service-features">
+                    <li data-i18n="svc5_f1">Architecture VoIP</li>
+                    <li data-i18n="svc5_f2">Qualité de service (QoS)</li>
+                    <li>SMS Gateway</li>
+                    <li>Unified Communications</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">🔧</span>
+                <h3>IT & Infrastructure</h3>
+                <p data-i18n="svc6_desc">Conception et maintenance d'infrastructures IT robustes, sécurisées et évolutives.</p>
+                <ul class="service-features">
+                    <li data-i18n="svc6_f1">Réseaux & Protocoles : IP/MPLS, BGP, OSPF, ISIS, VPLS</li>
+                    <li>Équipements : Nokia, Cisco, Huawei</li>
+                    <li data-i18n="svc6_f3">écurité & Outils : Fortinet (FortiManager, FortiAnalyzer), NFM-P</li>
+                    <li>Disaster recovery</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">📈</span>
+                <h3>Technical Pre-Sales</h3>
+                <p data-i18n="svc7_desc">Support commercial et expertise technique pour transformer les besoins clients en solutions performantes.</p>
+                <ul class="service-features">
+                    <li>Solution Design</li>
+                    <li>Technical Proposals</li>
+                    <li>Pricing Support</li>
+                    <li>Client Presentations</li>
+                </ul>
+            </div>
+            <div class="service-card fade-in">
+                <span class="service-icon">⚙️</span>
+                <h3>Operations & Administration</h3>
+                <p data-i18n="svc8_desc">Gestion efficace des opérations administratives, achats stratégiques et coordination des activités corporate.</p>
+                <ul class="service-features">
+                    <li>Procurement & Purchasing</li>
+                    <li>Contract Management</li>
+                    <li>Logistics & Maritime Support</li>
+                    <li>Administrative Coordination</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Expertise Section -->
+    <section class="expertise" id="expertise">
+        <div class="expertise-content">
+            <div class="expertise-stats fade-in">
+                <div class="stat-card">
+                    <span class="stat-number" data-target="15">0</span>
+                    <span class="stat-label" data-i18n="stat1_label">Années d'Expérience</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="5">0</span>
+                    <span class="stat-label" data-i18n="stat2_label">Projets Déployés</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="99" data-suffix="%">0</span>
+                    <span class="stat-label" data-i18n="stat3_label">Disponibilité</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="7">0</span>
+                    <span class="stat-label" data-i18n="stat4_label">7/7 Support</span>
+                </div>
+            </div>
+            <div class="expertise-text fade-in">
+                <h2 data-i18n="expertise_title">Excellence Opérationnelle</h2>
+                <p data-i18n="expertise_p1">Fort d'une solide expérience dans le secteur telecom, j'ai accompagné des opérateurs majeurs dans la transformation de leurs opérations réseau et IT. Mon approche combine expertise technique pointue et compréhension des enjeux business.</p>
+                <p data-i18n="expertise_p2">De la supervision NOC à l'optimisation des coûts d'interconnexion, en passant par la mise en place de solutions VoIP et SMS, je propose un accompagnement sur mesure adapté à vos défis spécifiques.</p>
+                <div class="tech-stack">
+                    <span class="tech-badge">Zabbix</span>
+                    <span class="tech-badge">Grafana</span>
+                    <span class="tech-badge">Ribbon</span>
+                    <span class="tech-badge">Asterisk</span>
+                    <span class="tech-badge">Voipmonitor</span>
+                    <span class="tech-badge">iTest</span>
+                    <span class="tech-badge">Wireshark</span>
+                    <span class="tech-badge">Cloudflare</span>
+                    <span class="tech-badge">SBC</span>
+                    <span class="tech-badge">Captura</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solutions Section -->
+    <section class="solutions" id="solutions">
+        <div class="section-header fade-in">
+            <h2 data-i18n="solutions_title">Solutions Clés</h2>
+            <p data-i18n="solutions_subtitle">Des offres packagées pour répondre rapidement à vos besoins critiques</p>
+        </div>
+        <div class="solutions-grid">
+            <div class="solution-card fade-in">
+                <div class="solution-header"><div class="solution-icon">🔍</div><h3 data-i18n="sol1_title">Monitoring Pro</h3></div>
+                <p data-i18n="sol1_desc">Solution complète de supervision réseau et applicative avec alerting intelligent et tableaux de bord personnalisés.</p>
+                <ul class="solution-list">
+                    <li data-i18n="sol1_f1">Déploiement Zabbix/Prometheus</li>
+                    <li data-i18n="sol1_f2">Dashboards Grafana custom</li>
+                    <li data-i18n="sol1_f3">Alerting multi-canaux</li>
+                    <li data-i18n="sol1_f4">Rapports de disponibilité</li>
+                    <li>Capacity planning</li>
+                </ul>
+            </div>
+            <div class="solution-card featured fade-in">
+                <div class="solution-header"><div class="solution-icon">🎯</div><h3 data-i18n="sol2_title">Centre de Services</h3></div>
+                <p data-i18n="sol2_desc">Mise en place d'un centre de services complet intégrant ticketing, gestion des assets et automatisation.</p>
+                <ul class="solution-list">
+                    <li data-i18n="sol2_f1">Implémentation ITSM</li>
+                    <li data-i18n="sol2_f2">Portail self-service</li>
+                    <li data-i18n="sol2_f3">Base de connaissances</li>
+                    <li data-i18n="sol2_f4">Automatisation des escalades</li>
+                    <li data-i18n="sol2_f5">Métriques SLA en temps réel</li>
+                </ul>
+            </div>
+            <div class="solution-card fade-in">
+                <div class="solution-header"><div class="solution-icon">📈</div><h3 data-i18n="sol3_title">Optimisation Pricing</h3></div>
+                <p data-i18n="sol3_desc">Analyse et optimisation de votre stratégie tarifaire pour maximiser les marges tout en restant compétitif.</p>
+                <ul class="solution-list">
+                    <li data-i18n="sol3_f1">Audit des coûts interconnect</li>
+                    <li data-i18n="sol3_f2">Modélisation de scénarios</li>
+                    <li data-i18n="sol3_f3">Négociation fournisseurs</li>
+                    <li data-i18n="sol3_f4">Monitoring des variations</li>
+                    <li data-i18n="sol3_f5">Reporting financier</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Careers Section -->
+    <section class="contact" id="careers" style="background: var(--dark-bg); position: relative; border-bottom: 1px solid rgba(0,212,255,0.1);">
+        <div class="contact-container">
+            <div class="contact-info fade-in">
+                <h2 data-i18n="careers_title">Rejoignez-nous</h2>
+                <p data-i18n="careers_subtitle">Trouvez votre prochaine opportunité et contribuez à redéfinir l'écosystème telecom avec A2M Core Operations.</p>
+                <div class="highlight-item" style="margin-top:2.5rem;background:rgba(0,212,255,0.05);text-align:left;padding:2rem;border-radius:15px;display:block;">
+                    <h3 style="color:white;margin-bottom:1rem;font-size:1.3rem;" data-i18n="careers_why_title">Pourquoi A2M ?</h3>
+                    <ul class="service-features">
+                        <li data-i18n="careers_why1">Environnement exigeant et innovant</li>
+                        <li data-i18n="careers_why2">Projets internationaux stimulants</li>
+                        <li data-i18n="careers_why3">Formation continue et accélération de carrière</li>
+                        <li data-i18n="careers_why4">Culture de l'excellence technique</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="contact-form fade-in">
+                <form id="careerForm" action="https://formsubmit.co/mrabet.imed@gmail.com" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="_captcha" value="false">
+                    <input type="hidden" name="_subject" value="Nouvelle candidature - A2M Telecom">
+                    <input type="hidden" name="_template" value="table">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="firstName" data-i18n="form_firstname">Prénom *</label>
+                            <input type="text" id="firstName" name="firstName" required data-i18n-placeholder="form_firstname_ph" placeholder="Votre prénom">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="lastName" data-i18n="form_lastname">Nom *</label>
+                            <input type="text" id="lastName" name="lastName" required data-i18n-placeholder="form_lastname_ph" placeholder="Votre nom">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:1.5rem;">
+                        <label for="country" data-i18n="form_country">Pays de résidence *</label>
+                        <select id="country" name="country" required>
+                            <option value="" data-i18n="form_select_country">Sélectionnez un pays</option>
+                            <option value="tn" data-i18n="country_tn">Tunisie</option>
+                            <option value="fr" data-i18n="country_fr">France</option>
+                            <option value="uk" data-i18n="country_uk">Royaume-Uni</option>
+                            <option value="ca" data-i18n="country_ca">Canada</option>
+                            <option value="autre" data-i18n="country_other">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="careerEmail" data-i18n="form_email_opt">Email (Optionnel)</label>
+                        <input type="email" id="careerEmail" name="careerEmail" data-i18n-placeholder="form_email_ph" placeholder="vous@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="cvUpload" data-i18n="form_cv">Votre CV (PDF préféré) *</label>
+                        <input type="file" id="cvUpload" name="cvUpload" accept=".pdf,.doc,.docx" required style="padding:0.8rem;background:rgba(0,0,0,0.5);cursor:pointer;border:1px dashed rgba(0,212,255,0.4);">
+                    </div>
+                    <div class="form-group">
+                        <label for="motivation" data-i18n="form_motivation">Lettre de motivation</label>
+                        <textarea id="motivation" name="motivation" data-i18n-placeholder="form_motivation_ph" placeholder="Décrivez brièvement vos motivations..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" data-i18n="form_submit_career">Submit Application</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="contact-container">
+            <div class="contact-info fade-in">
+                <h2 data-i18n="contact_title">Connectons-nous</h2>
+                <p data-i18n="contact_subtitle">Prêt à optimiser vos opérations telecom ? Discutons de vos projets et objectifs.</p>
+                <div class="contact-methods">
+                    <a href="mailto:mrabet.imed@gmail.com" class="contact-method">
+                        <div class="contact-icon">✉️</div>
+                        <div><h4>Email</h4><p>Mrabet.imed@gmail.com</p></div>
+                    </a>
+                    <a href="tel:+21698461162" class="contact-method">
+                        <div class="contact-icon">📞</div>
+                        <div><h4 data-i18n="contact_phone">Téléphone</h4><p>+216 98 461 162</p></div>
+                    </a>
+                    <a href="https://www.linkedin.com/in/imed-mrabet-79822078/" class="contact-method" target="_blank">
+                        <div class="contact-icon">💼</div>
+                        <div><h4>LinkedIn</h4><p>linkedin.com/in/imed-mrabet</p></div>
+                    </a>
+                </div>
+            </div>
+            <div class="contact-form fade-in">
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name" data-i18n="contact_name">Nom complet</label>
+                        <input type="text" id="name" name="name" required data-i18n-placeholder="contact_name_ph" placeholder="Votre nom">
+                    </div>
+                    <div class="form-group">
+                        <label for="email" data-i18n="contact_email">Email professionnel</label>
+                        <input type="email" id="email" name="email" required data-i18n-placeholder="contact_email_ph" placeholder="vous@entreprise.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="company" data-i18n="contact_company">Entreprise</label>
+                        <input type="text" id="company" name="company" data-i18n-placeholder="contact_company_ph" placeholder="Nom de votre société">
+                    </div>
+                    <div class="form-group">
+                        <label for="service" data-i18n="contact_service">Service intéressé</label>
+                        <select id="service" name="service">
+                            <option value="" data-i18n="contact_select_service">Sélectionnez un service</option>
+                            <option value="monitoring" data-i18n="contact_svc1">Monitoring & Supervision</option>
+                            <option value="ticketing" data-i18n="contact_svc2">Ticketing & ITSM</option>
+                            <option value="voip">VoIP & SMS</option>
+                            <option value="pricing" data-i18n="contact_svc4">Pricing & Optimisation</option>
+                            <option value="other" data-i18n="contact_svc5">Autre demande</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message" data-i18n="contact_message">Votre message</label>
+                        <textarea id="message" name="message" required data-i18n-placeholder="contact_message_ph" placeholder="Décrivez votre projet ou vos besoins..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;" data-i18n="contact_submit">Envoyer la demande</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">A2M <span>CORE OPERATIONS</span></div>
+            <p class="footer-tagline" data-i18n="footer_tagline">"Connecter le monde. Communiquer sans limite."</p>
+            <div class="footer-links">
+                <a href="#about" data-i18n="nav_about">About Us</a>
+                <a href="#services" data-i18n="nav_services">Services</a>
+                <a href="#expertise" data-i18n="nav_expertise">Expertise</a>
+                <a href="#solutions" data-i18n="nav_solutions">Solutions</a>
+                <a href="#careers" data-i18n="nav_careers">Careers</a>
+                <a href="#contact" data-i18n="nav_contact">Contact</a>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer_copy">&copy; 2026 A2M Core Operations. Tous droits réservés.</p>
+                <p style="margin-top:0.5rem;font-size:0.8rem;" data-i18n="footer_sub">Réseau • Voix • Impact Réel</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="successModal">
+        <div class="success-content">
+            <div class="success-icon">✓</div>
+            <h3 data-i18n="modal_title">Merci !</h3>
+            <p data-i18n="modal_text">Votre candidature a été soumise avec succès. Nous examinerons votre profil et vous contacterons bientôt.</p>
+            <button class="btn btn-primary" onclick="closeSuccessModal()" style="width:100%;justify-content:center;" data-i18n="modal_btn">Continuer</button>
+        </div>
+    </div>
+
+    <script>
+    // ============================================================
+    // TRANSLATIONS — 4 LANGUAGES
+    // ============================================================
+    const translations = {
+        fr: {
+            nav_about: "À Propos",
+            nav_services: "Services",
+            nav_expertise: "Expertise",
+            nav_solutions: "Solutions",
+            nav_careers: "Carrières",
+            nav_contact: "Contact",
+            hero_subtitle: "Expert en solutions telecom et IT, je transforme vos infrastructures réseau en atouts stratégiques. De la supervision à l'optimisation pricing, j'accompagne votre excellence opérationnelle.",
+            hero_cta1: "Découvrir les Solutions",
+            hero_cta2: "Me Contacter",
+            about_title: "Notre Équipe",
+            about_subtitle: "Rencontrez les experts qui propulsent A2M Core Operations",
+            team1_role: "Responsable des Opérations Tech",
+            team1_desc: "Fort de 14+ ans en Wholesale Telecom, Imed pilote les opérations réseau, l'assurance des revenus et les stratégies d'interconnexion complexes.",
+            team1_tag1: "Opérations",
+            team1_tag2: "Stratégie",
+            team1_tag3: "Team leader",
+            team1_tag4: "Support & Exploitation",
+            team2_role: "Directrice RH et Achat",
+            team2_desc: "Responsable des opérations RH, du développement commercial VOIP Wholesale, de la gestion des relations partenaires et clients, ainsi que de la coordination administrative et stratégique, contribuant à la croissance et à l’excellence opérationnelle de l’entreprise.",
+            team2_tag1: "Ressources Humaines",
+            team2_tag2: "Achats",
+            team3_role: "Ingénieur Réseaux & Télécoms Senior",
+            team3_desc: "Plus de 20 ans d'expérience dans les environnements opérateurs critiques. Expert du réseau IP/MPLS Backbone, spécialisé dans la gestion d'incidents complexes, la migration d'infrastructures à grande échelle et le management d'équipes techniques hautement qualifiées.",
+            team3_tag1: "Expert IP/MPLS",
+            team3_tag2: "Backbone",
+            team3_tag3: "Support & Exploitation",
+            highlight1: "Wholesale International",
+            highlight2: "Revenue Assurance",
+            highlight3: "Opérations Réseau",
+            highlight4: "Innovation & Config",
+            services_title: "Domaines d'Expertise",
+            services_subtitle: "Une approche globale des opérations telecom combinant expertise technique et vision business",
+            svc1_desc: "Gestion et optimisation des infrastructures réseau pour garantir disponibilité et performance maximale.",
+            svc1_f1: "Supervision réseau 24/7",
+            svc1_f2: "Gestion des incidents NOC",
+            svc1_f3: "Optimisation des flux",
+            svc1_f4: "Interconnexion internationale",
+            svc2_desc: "Systèmes de gestion d'incidents et support client optimisés pour une résolution rapide et efficace.",
+            svc2_f1: "Implémentation ITSM",
+            svc2_f2: "Automatisation des workflows",
+            svc2_f4: "Reporting et analytics",
+            svc3_desc: "Stratégies tarifaires et optimisation du revenu pour maximiser la rentabilité de vos services telecom.",
+            svc3_f1: "Analyse de rentabilité",
+            svc3_f2: "Modélisation tarifaire",
+            svc3_f3: "Benchmarking marché",
+            svc3_f4: "Optimisation interconnect",
+            svc4_desc: "Surveillance en temps réel et analyse prédictive pour anticiper les problèmes avant qu'ils n'impactent.",
+            svc4_f1: "Dashboards temps réel",
+            svc4_f2: "Alerting intelligent",
+            svc5_desc: "Solutions de téléphonie IP et services de messagerie unifiée pour une communication fluide et moderne.",
+            svc5_f1: "Architecture VoIP",
+            svc5_f2: "Qualité de service (QoS)",
+            svc6_desc: "Conception et maintenance d'infrastructures IT robustes, sécurisées et évolutives.",
+            svc6_f1: "Architecture système",
+            svc6_f3: "Sécurité réseau",
+            svc7_desc: "Support commercial et expertise technique pour transformer les besoins clients en solutions performantes.",
+            svc8_desc: "Gestion efficace des opérations administratives, achats stratégiques et coordination des activités corporate.",
+            stat1_label: "Années d'Expérience",
+            stat2_label: "Projets Déployés",
+            stat3_label: "Disponibilité",
+            stat4_label: "Support 7/7",
+            expertise_title: "Excellence Opérationnelle",
+            expertise_p1: "Fort d'une solide expérience dans le secteur telecom, j'ai accompagné des opérateurs majeurs dans la transformation de leurs opérations réseau et IT. Mon approche combine expertise technique pointue et compréhension des enjeux business.",
+            expertise_p2: "De la supervision NOC à l'optimisation des coûts d'interconnexion, en passant par la mise en place de solutions VoIP et SMS, je propose un accompagnement sur mesure adapté à vos défis spécifiques.",
+            solutions_title: "Solutions Clés",
+            solutions_subtitle: "Des offres packagées pour répondre rapidement à vos besoins critiques",
+            sol1_title: "Monitoring Pro",
+            sol1_desc: "Solution complète de supervision réseau et applicative avec alerting intelligent et tableaux de bord personnalisés.",
+            sol1_f1: "Déploiement Zabbix/Prometheus",
+            sol1_f2: "Dashboards Grafana custom",
+            sol1_f3: "Alerting multi-canaux",
+            sol1_f4: "Rapports de disponibilité",
+            sol2_title: "Centre de Services",
+            sol2_desc: "Mise en place d'un centre de services complet intégrant ticketing, gestion des assets et automatisation.",
+            sol2_f1: "Implémentation ITSM",
+            sol2_f2: "Portail self-service",
+            sol2_f3: "Base de connaissances",
+            sol2_f4: "Automatisation des escalades",
+            sol2_f5: "Métriques SLA en temps réel",
+            sol3_title: "Optimisation Pricing",
+            sol3_desc: "Analyse et optimisation de votre stratégie tarifaire pour maximiser les marges tout en restant compétitif.",
+            sol3_f1: "Audit des coûts interconnect",
+            sol3_f2: "Modélisation de scénarios",
+            sol3_f3: "Négociation fournisseurs",
+            sol3_f4: "Monitoring des variations",
+            sol3_f5: "Reporting financier",
+            careers_title: "Rejoignez-nous",
+            careers_subtitle: "Trouvez votre prochaine opportunité et contribuez à redéfinir l'écosystème telecom avec A2M Core Operations.",
+            careers_why_title: "Pourquoi A2M ?",
+            careers_why1: "Environnement exigeant et innovant",
+            careers_why2: "Projets internationaux stimulants",
+            careers_why3: "Formation continue et accélération de carrière",
+            careers_why4: "Culture de l'excellence technique",
+            form_firstname: "Prénom *",
+            form_firstname_ph: "Votre prénom",
+            form_lastname: "Nom *",
+            form_lastname_ph: "Votre nom",
+            form_country: "Pays de résidence *",
+            form_select_country: "Sélectionnez un pays",
+            country_tn: "Tunisie",
+            country_fr: "France",
+            country_uk: "Royaume-Uni",
+            country_ca: "Canada",
+            country_other: "Autre",
+            form_email_opt: "Email (Optionnel)",
+            form_email_ph: "vous@example.com",
+            form_cv: "Votre CV (PDF préféré) *",
+            form_motivation: "Lettre de motivation",
+            form_motivation_ph: "Décrivez brièvement vos motivations...",
+            form_submit_career: "Envoyer ma candidature",
+            contact_title: "Connectons-nous",
+            contact_subtitle: "Prêt à optimiser vos opérations telecom ? Discutons de vos projets et objectifs.",
+            contact_phone: "Téléphone",
+            contact_name: "Nom complet",
+            contact_name_ph: "Votre nom",
+            contact_email: "Email professionnel",
+            contact_email_ph: "vous@entreprise.com",
+            contact_company: "Entreprise",
+            contact_company_ph: "Nom de votre société",
+            contact_service: "Service intéressé",
+            contact_select_service: "Sélectionnez un service",
+            contact_svc1: "Monitoring & Supervision",
+            contact_svc2: "Ticketing & ITSM",
+            contact_svc4: "Pricing & Optimisation",
+            contact_svc5: "Autre demande",
+            contact_message: "Votre message",
+            contact_message_ph: "Décrivez votre projet ou vos besoins...",
+            contact_submit: "Envoyer la demande",
+            footer_tagline: '"Connecter le monde. Communiquer sans limite."',
+            footer_copy: "© 2026 A2M Core Operations. Tous droits réservés.",
+            footer_sub: "Réseau • Voix • Impact Réel",
+            modal_title: "Merci !",
+            modal_text: "Votre candidature a été soumise avec succès. Nous examinerons votre profil et vous contacterons bientôt.",
+            modal_btn: "Continuer"
+        },
+        en: {
+            nav_about: "About Us",
+            nav_services: "Services",
+            nav_expertise: "Expertise",
+            nav_solutions: "Solutions",
+            nav_careers: "Careers",
+            nav_contact: "Contact",
+            hero_subtitle: "Telecom & IT solutions expert, I transform your network infrastructures into strategic assets. From supervision to pricing optimization, I support your operational excellence.",
+            hero_cta1: "Discover Solutions",
+            hero_cta2: "Contact Me",
+            about_title: "Our Team",
+            about_subtitle: "Meet the experts driving A2M Core Operations",
+            team1_role: "Head of Tech Operations",
+            team1_desc: "With 14+ years in Wholesale Telecom, Imed drives network operations, revenue assurance, and complex interconnect strategies.",
+            team1_tag1: "Operations",
+            team1_tag2: "Strategy",
+            team2_role: "HR & Purchasing Director",
+            team2_desc: "Responsible for administrative operations, strategic purchasing, logistics coordination and maritime support, ensuring operational excellence.",
+            team2_tag1: "Human Resources",
+            team2_tag2: "Purchasing",
+            team3_role: "Coming Soon",
+            team3_desc: "Next Generation inchallah",
+            team3_tag1: "First 1",
+            team3_tag2: "Second 2",
+            highlight1: "International Wholesale",
+            highlight2: "Revenue Assurance",
+            highlight3: "Network Operations",
+            highlight4: "Innovation & Config",
+            services_title: "Areas of Expertise",
+            services_subtitle: "A comprehensive approach to telecom operations combining technical expertise and business vision",
+            svc1_desc: "Management and optimization of network infrastructures to guarantee maximum availability and performance.",
+            svc1_f1: "24/7 Network Monitoring",
+            svc1_f2: "NOC Incident Management",
+            svc1_f3: "Traffic Optimization",
+            svc1_f4: "International Interconnection",
+            svc2_desc: "Optimized incident management systems and customer support for fast and effective resolution.",
+            svc2_f1: "ITSM Implementation",
+            svc2_f2: "Workflow Automation",
+            svc2_f4: "Reporting & Analytics",
+            svc3_desc: "Pricing strategies and revenue optimization to maximize the profitability of your telecom services.",
+            svc3_f1: "Profitability Analysis",
+            svc3_f2: "Tariff Modeling",
+            svc3_f3: "Market Benchmarking",
+            svc3_f4: "Interconnect Optimization",
+            svc4_desc: "Real-time monitoring and predictive analysis to anticipate problems before they have an impact.",
+            svc4_f1: "Real-time Dashboards",
+            svc4_f2: "Intelligent Alerting",
+            svc5_desc: "IP telephony solutions and unified messaging services for smooth and modern communication.",
+            svc5_f1: "VoIP Architecture",
+            svc5_f2: "Quality of Service (QoS)",
+            svc6_desc: "Design and maintenance of robust, secure and scalable IT infrastructures.",
+            svc6_f1: "System Architecture",
+            svc6_f3: "Network Security",
+            svc7_desc: "Commercial support and technical expertise to transform customer needs into high-performance solutions.",
+            svc8_desc: "Efficient management of administrative operations, strategic purchasing and corporate activity coordination.",
+            stat1_label: "Years of Experience",
+            stat2_label: "Deployed Projects",
+            stat3_label: "Availability",
+            stat4_label: "7/7 Support",
+            expertise_title: "Operational Excellence",
+            expertise_p1: "With solid experience in the telecom sector, I have supported major operators in transforming their network and IT operations. My approach combines sharp technical expertise with an understanding of business challenges.",
+            expertise_p2: "From NOC supervision to interconnection cost optimization, including VoIP and SMS solutions, I offer tailored support adapted to your specific challenges.",
+            solutions_title: "Key Solutions",
+            solutions_subtitle: "Packaged offerings to quickly meet your critical needs",
+            sol1_title: "Monitoring Pro",
+            sol1_desc: "Complete network and application monitoring solution with intelligent alerting and customized dashboards.",
+            sol1_f1: "Zabbix/Prometheus Deployment",
+            sol1_f2: "Custom Grafana Dashboards",
+            sol1_f3: "Multi-channel Alerting",
+            sol1_f4: "Availability Reports",
+            sol2_title: "Service Center",
+            sol2_desc: "Setup of a complete service center integrating ticketing, asset management and automation.",
+            sol2_f1: "ITSM Implementation",
+            sol2_f2: "Self-service Portal",
+            sol2_f3: "Knowledge Base",
+            sol2_f4: "Escalation Automation",
+            sol2_f5: "Real-time SLA Metrics",
+            sol3_title: "Pricing Optimization",
+            sol3_desc: "Analysis and optimization of your pricing strategy to maximize margins while remaining competitive.",
+            sol3_f1: "Interconnect Cost Audit",
+            sol3_f2: "Scenario Modeling",
+            sol3_f3: "Supplier Negotiation",
+            sol3_f4: "Variation Monitoring",
+            sol3_f5: "Financial Reporting",
+            careers_title: "Join Us",
+            careers_subtitle: "Find your next opportunity and help redefine the telecom ecosystem with A2M Core Operations.",
+            careers_why_title: "Why A2M?",
+            careers_why1: "Demanding and innovative environment",
+            careers_why2: "Stimulating international projects",
+            careers_why3: "Continuous training and career acceleration",
+            careers_why4: "Culture of technical excellence",
+            form_firstname: "First Name *",
+            form_firstname_ph: "Your first name",
+            form_lastname: "Last Name *",
+            form_lastname_ph: "Your last name",
+            form_country: "Country of Residence *",
+            form_select_country: "Select a country",
+            country_tn: "Tunisia",
+            country_fr: "France",
+            country_uk: "United Kingdom",
+            country_ca: "Canada",
+            country_other: "Other",
+            form_email_opt: "Email (Optional)",
+            form_email_ph: "you@example.com",
+            form_cv: "Your CV (PDF preferred) *",
+            form_motivation: "Cover Letter",
+            form_motivation_ph: "Briefly describe your motivations...",
+            form_submit_career: "Submit Application",
+            contact_title: "Let's Connect",
+            contact_subtitle: "Ready to optimize your telecom operations? Let's discuss your projects and goals.",
+            contact_phone: "Phone",
+            contact_name: "Full Name",
+            contact_name_ph: "Your name",
+            contact_email: "Professional Email",
+            contact_email_ph: "you@company.com",
+            contact_company: "Company",
+            contact_company_ph: "Your company name",
+            contact_service: "Service of Interest",
+            contact_select_service: "Select a service",
+            contact_svc1: "Monitoring & Supervision",
+            contact_svc2: "Ticketing & ITSM",
+            contact_svc4: "Pricing & Optimization",
+            contact_svc5: "Other Request",
+            contact_message: "Your Message",
+            contact_message_ph: "Describe your project or needs...",
+            contact_submit: "Send Request",
+            footer_tagline: '"Connecting the world. Communicating without limits."',
+            footer_copy: "© 2026 A2M Core Operations. All rights reserved.",
+            footer_sub: "Network • Voice • Real Impact",
+            modal_title: "Thank You!",
+            modal_text: "Your application has been successfully submitted. We will review your profile and get back to you soon.",
+            modal_btn: "Continue"
+        },
+        ar: {
+            nav_about: "من نحن",
+            nav_services: "الخدمات",
+            nav_expertise: "الخبرة",
+            nav_solutions: "الحلول",
+            nav_careers: "الوظائف",
+            nav_contact: "اتصل بنا",
+            hero_subtitle: "خبير في حلول الاتصالات وتقنية المعلومات، أحوّل بنيتك التحتية للشبكات إلى أصول استراتيجية. من الإشراف إلى تحسين التسعير، أدعم تميزك التشغيلي.",
+            hero_cta1: "اكتشف الحلول",
+            hero_cta2: "تواصل معي",
+            about_title: "فريقنا",
+            about_subtitle: "تعرّف على الخبراء الذين يقودون عمليات A2M Core",
+            team1_role: "رئيس العمليات التقنية",
+            team1_desc: "بخبرة تزيد عن 14 عامًا في الاتصالات بالجملة، يقود عمليات الشبكة وضمان الإيرادات واستراتيجيات الربط المعقدة.",
+            team1_tag1: "العمليات",
+            team1_tag2: "الاستراتيجية",
+            team2_role: "مديرة الموارد البشرية والمشتريات",
+            team2_desc: "مسؤولة عن العمليات الإدارية والمشتريات الاستراتيجية وتنسيق اللوجستيات والدعم البحري لضمان التميز التشغيلي.",
+            team2_tag1: "الموارد البشرية",
+            team2_tag2: "المشتريات",
+            team3_role: "قادم قريبًا",
+            team3_desc: "الجيل القادم إن شاء الله",
+            team3_tag1: "أول 1",
+            team3_tag2: "ثاني 2",
+            highlight1: "البيع بالجملة الدولي",
+            highlight2: "ضمان الإيرادات",
+            highlight3: "عمليات الشبكة",
+            highlight4: "الابتكار والتكوين",
+            services_title: "مجالات الخبرة",
+            services_subtitle: "نهج شامل لعمليات الاتصالات يجمع بين الخبرة التقنية والرؤية التجارية",
+            svc1_desc: "إدارة وتحسين البنية التحتية للشبكات لضمان أقصى قدر من التوافر والأداء.",
+            svc1_f1: "مراقبة الشبكة على مدار الساعة",
+            svc1_f2: "إدارة حوادث مركز العمليات",
+            svc1_f3: "تحسين حركة المرور",
+            svc1_f4: "الربط الدولي",
+            svc2_desc: "أنظمة إدارة الحوادث ودعم العملاء المُحسَّنة لحل سريع وفعّال.",
+            svc2_f1: "تطبيق ITSM",
+            svc2_f2: "أتمتة سير العمل",
+            svc2_f4: "التقارير والتحليلات",
+            svc3_desc: "استراتيجيات التسعير وتحسين الإيرادات لتعظيم ربحية خدمات الاتصالات.",
+            svc3_f1: "تحليل الربحية",
+            svc3_f2: "نمذجة التعريفات",
+            svc3_f3: "معايرة السوق",
+            svc3_f4: "تحسين الربط البيني",
+            svc4_desc: "المراقبة في الوقت الفعلي والتحليل التنبؤي لتوقع المشكلات قبل تأثيرها.",
+            svc4_f1: "لوحات معلومات فورية",
+            svc4_f2: "تنبيهات ذكية",
+            svc5_desc: "حلول هاتف IP وخدمات الرسائل الموحدة للتواصل السلس والحديث.",
+            svc5_f1: "هندسة VoIP",
+            svc5_f2: "جودة الخدمة (QoS)",
+            svc6_desc: "تصميم وصيانة البنية التحتية لتقنية المعلومات المتينة والآمنة وقابلة للتطوير.",
+            svc6_f1: "هندسة النظام",
+            svc6_f3: "أمن الشبكة",
+            svc7_desc: "الدعم التجاري والخبرة التقنية لتحويل احتياجات العملاء إلى حلول عالية الأداء.",
+            svc8_desc: "الإدارة الفعّالة للعمليات الإدارية والمشتريات الاستراتيجية وتنسيق الأنشطة المؤسسية.",
+            stat1_label: "سنوات الخبرة",
+            stat2_label: "المشاريع المنفّذة",
+            stat3_label: "مستوى التوافر",
+            stat4_label: "دعم 7/7",
+            expertise_title: "التميز التشغيلي",
+            expertise_p1: "بخبرة راسخة في قطاع الاتصالات، دعمت كبرى المشغلين في تحويل عمليات شبكاتهم وتقنية المعلومات. يجمع نهجي بين الخبرة التقنية العميقة وفهم التحديات التجارية.",
+            expertise_p2: "من إشراف مركز عمليات الشبكة إلى تحسين تكاليف الربط البيني ومرورًا بتطبيق حلول VoIP والرسائل القصيرة، أقدم دعمًا مخصصًا لتحدياتك.",
+            solutions_title: "الحلول الرئيسية",
+            solutions_subtitle: "عروض مجمّعة للاستجابة السريعة لاحتياجاتك الحرجة",
+            sol1_title: "مراقبة احترافية",
+            sol1_desc: "حل شامل لمراقبة الشبكة والتطبيقات مع تنبيهات ذكية ولوحات معلومات مخصصة.",
+            sol1_f1: "نشر Zabbix/Prometheus",
+            sol1_f2: "لوحات Grafana مخصصة",
+            sol1_f3: "تنبيهات متعددة القنوات",
+            sol1_f4: "تقارير التوافر",
+            sol2_title: "مركز الخدمات",
+            sol2_desc: "إنشاء مركز خدمات متكامل يدمج التذاكر وإدارة الأصول والأتمتة.",
+            sol2_f1: "تطبيق ITSM",
+            sol2_f2: "بوابة الخدمة الذاتية",
+            sol2_f3: "قاعدة المعرفة",
+            sol2_f4: "أتمتة التصعيد",
+            sol2_f5: "مقاييس SLA الفورية",
+            sol3_title: "تحسين التسعير",
+            sol3_desc: "تحليل وتحسين استراتيجية التسعير لتعظيم الهوامش مع الحفاظ على التنافسية.",
+            sol3_f1: "تدقيق تكاليف الربط البيني",
+            sol3_f2: "نمذجة السيناريوهات",
+            sol3_f3: "التفاوض مع الموردين",
+            sol3_f4: "مراقبة التغيرات",
+            sol3_f5: "التقارير المالية",
+            careers_title: "انضم إلينا",
+            careers_subtitle: "ابحث عن فرصتك القادمة وساهم في إعادة تشكيل منظومة الاتصالات مع A2M Core Operations.",
+            careers_why_title: "لماذا A2M؟",
+            careers_why1: "بيئة مطلبية ومبتكرة",
+            careers_why2: "مشاريع دولية محفّزة",
+            careers_why3: "تدريب مستمر وتسريع مسيرة مهنية",
+            careers_why4: "ثقافة التميز التقني",
+            form_firstname: "الاسم الأول *",
+            form_firstname_ph: "اسمك الأول",
+            form_lastname: "اللقب *",
+            form_lastname_ph: "لقبك",
+            form_country: "بلد الإقامة *",
+            form_select_country: "اختر بلدًا",
+            country_tn: "تونس",
+            country_fr: "فرنسا",
+            country_uk: "المملكة المتحدة",
+            country_ca: "كندا",
+            country_other: "أخرى",
+            form_email_opt: "البريد الإلكتروني (اختياري)",
+            form_email_ph: "you@example.com",
+            form_cv: "سيرتك الذاتية (PDF مفضّل) *",
+            form_motivation: "رسالة التحفيز",
+            form_motivation_ph: "اشرح بإيجاز دوافعك...",
+            form_submit_career: "إرسال الطلب",
+            contact_title: "تواصل معنا",
+            contact_subtitle: "هل أنت مستعد لتحسين عمليات اتصالاتك؟ لنتحدث عن مشاريعك وأهدافك.",
+            contact_phone: "الهاتف",
+            contact_name: "الاسم الكامل",
+            contact_name_ph: "اسمك",
+            contact_email: "البريد المهني",
+            contact_email_ph: "you@company.com",
+            contact_company: "الشركة",
+            contact_company_ph: "اسم شركتك",
+            contact_service: "الخدمة المطلوبة",
+            contact_select_service: "اختر خدمة",
+            contact_svc1: "المراقبة والإشراف",
+            contact_svc2: "نظام التذاكر وITSM",
+            contact_svc4: "التسعير والتحسين",
+            contact_svc5: "طلب آخر",
+            contact_message: "رسالتك",
+            contact_message_ph: "صف مشروعك أو احتياجاتك...",
+            contact_submit: "إرسال الطلب",
+            footer_tagline: '"ربط العالم. التواصل بلا حدود."',
+            footer_copy: "© 2026 A2M Core Operations. جميع الحقوق محفوظة.",
+            footer_sub: "شبكة • صوت • أثر حقيقي",
+            modal_title: "شكرًا لك!",
+            modal_text: "تم تقديم طلبك بنجاح. سنراجع ملفك ونتواصل معك قريبًا.",
+            modal_btn: "متابعة"
+        },
+        ru: {
+            nav_about: "О нас",
+            nav_services: "Услуги",
+            nav_expertise: "Экспертиза",
+            nav_solutions: "Решения",
+            nav_careers: "Карьера",
+            nav_contact: "Контакты",
+            hero_subtitle: "Эксперт в области телекоммуникаций и IT-решений, я превращаю вашу сетевую инфраструктуру в стратегические активы. От мониторинга до оптимизации цен — я обеспечиваю вашу операционную эффективность.",
+            hero_cta1: "Узнать о решениях",
+            hero_cta2: "Связаться",
+            about_title: "Наша команда",
+            about_subtitle: "Познакомьтесь с экспертами, движущими A2M Core Operations",
+            team1_role: "Руководитель технических операций",
+            team1_desc: "С более чем 14-летним опытом в оптовых телекоммуникациях Имед руководит сетевыми операциями, обеспечением доходов и сложными стратегиями межсоединения.",
+            team1_tag1: "Операции",
+            team1_tag2: "Стратегия",
+            team2_role: "Директор по HR и закупкам",
+            team2_desc: "Отвечает за административные операции, стратегические закупки, логистическую координацию и морскую поддержку, обеспечивая операционное совершенство.",
+            team2_tag1: "Кадры",
+            team2_tag2: "Закупки",
+            team3_role: "Скоро в строю",
+            team3_desc: "Следующее поколение, иншалла",
+            team3_tag1: "Первый 1",
+            team3_tag2: "Второй 2",
+            highlight1: "Международный оптовый рынок",
+            highlight2: "Обеспечение доходов",
+            highlight3: "Сетевые операции",
+            highlight4: "Инновации и конфигурация",
+            services_title: "Области экспертизы",
+            services_subtitle: "Комплексный подход к телекоммуникационным операциям, сочетающий техническую экспертизу и бизнес-видение",
+            svc1_desc: "Управление и оптимизация сетевой инфраструктуры для обеспечения максимальной доступности и производительности.",
+            svc1_f1: "Круглосуточный мониторинг сети",
+            svc1_f2: "Управление инцидентами NOC",
+            svc1_f3: "Оптимизация трафика",
+            svc1_f4: "Международное межсоединение",
+            svc2_desc: "Оптимизированные системы управления инцидентами и поддержки клиентов для быстрого и эффективного решения проблем.",
+            svc2_f1: "Внедрение ITSM",
+            svc2_f2: "Автоматизация рабочих процессов",
+            svc2_f4: "Отчётность и аналитика",
+            svc3_desc: "Стратегии ценообразования и оптимизация доходов для максимизации прибыльности телекоммуникационных услуг.",
+            svc3_f1: "Анализ рентабельности",
+            svc3_f2: "Тарифное моделирование",
+            svc3_f3: "Рыночный бенчмаркинг",
+            svc3_f4: "Оптимизация межсоединения",
+            svc4_desc: "Мониторинг в реальном времени и прогнозный анализ для предупреждения проблем.",
+            svc4_f1: "Дашборды в реальном времени",
+            svc4_f2: "Интеллектуальное оповещение",
+            svc5_desc: "Решения IP-телефонии и унифицированных сообщений для плавной и современной коммуникации.",
+            svc5_f1: "Архитектура VoIP",
+            svc5_f2: "Качество обслуживания (QoS)",
+            svc6_desc: "Проектирование и обслуживание надёжной, безопасной и масштабируемой IT-инфраструктуры.",
+            svc6_f1: "Системная архитектура",
+            svc6_f3: "Сетевая безопасность",
+            svc7_desc: "Коммерческая поддержка и техническая экспертиза для преобразования потребностей клиентов в высокопроизводительные решения.",
+            svc8_desc: "Эффективное управление административными операциями, стратегическими закупками и корпоративной деятельностью.",
+            stat1_label: "Лет опыта",
+            stat2_label: "Развёрнутых проектов",
+            stat3_label: "Доступность",
+            stat4_label: "Поддержка 7/7",
+            expertise_title: "Операционное совершенство",
+            expertise_p1: "Имея солидный опыт в телекоммуникационном секторе, я сопровождал крупных операторов в трансформации их сетевых и IT-операций. Мой подход сочетает глубокую техническую экспертизу и понимание бизнес-задач.",
+            expertise_p2: "От надзора NOC до оптимизации затрат на межсоединение, включая внедрение решений VoIP и SMS, я предлагаю индивидуальное сопровождение под ваши задачи.",
+            solutions_title: "Ключевые решения",
+            solutions_subtitle: "Готовые пакеты для быстрого удовлетворения ваших критических потребностей",
+            sol1_title: "Monitoring Pro",
+            sol1_desc: "Комплексное решение для мониторинга сети и приложений с интеллектуальными оповещениями и настраиваемыми дашбордами.",
+            sol1_f1: "Развёртывание Zabbix/Prometheus",
+            sol1_f2: "Кастомные дашборды Grafana",
+            sol1_f3: "Многоканальное оповещение",
+            sol1_f4: "Отчёты о доступности",
+            sol2_title: "Центр услуг",
+            sol2_desc: "Создание полноценного центра услуг с тикетингом, управлением активами и автоматизацией.",
+            sol2_f1: "Внедрение ITSM",
+            sol2_f2: "Портал самообслуживания",
+            sol2_f3: "База знаний",
+            sol2_f4: "Автоматизация эскалаций",
+            sol2_f5: "Метрики SLA в реальном времени",
+            sol3_title: "Оптимизация цен",
+            sol3_desc: "Анализ и оптимизация стратегии ценообразования для максимизации маржи при сохранении конкурентоспособности.",
+            sol3_f1: "Аудит затрат на межсоединение",
+            sol3_f2: "Моделирование сценариев",
+            sol3_f3: "Переговоры с поставщиками",
+            sol3_f4: "Мониторинг изменений",
+            sol3_f5: "Финансовая отчётность",
+            careers_title: "Присоединяйтесь к нам",
+            careers_subtitle: "Найдите свою следующую возможность и помогите переосмыслить телекоммуникационную экосистему вместе с A2M.",
+            careers_why_title: "Почему A2M?",
+            careers_why1: "Требовательная и инновационная среда",
+            careers_why2: "Стимулирующие международные проекты",
+            careers_why3: "Непрерывное обучение и карьерный рост",
+            careers_why4: "Культура технического совершенства",
+            form_firstname: "Имя *",
+            form_firstname_ph: "Ваше имя",
+            form_lastname: "Фамилия *",
+            form_lastname_ph: "Ваша фамилия",
+            form_country: "Страна проживания *",
+            form_select_country: "Выберите страну",
+            country_tn: "Тунис",
+            country_fr: "Франция",
+            country_uk: "Великобритания",
+            country_ca: "Канада",
+            country_other: "Другое",
+            form_email_opt: "Email (необязательно)",
+            form_email_ph: "you@example.com",
+            form_cv: "Ваше резюме (PDF предпочтительно) *",
+            form_motivation: "Сопроводительное письмо",
+            form_motivation_ph: "Кратко опишите свою мотивацию...",
+            form_submit_career: "Отправить заявку",
+            contact_title: "Свяжитесь с нами",
+            contact_subtitle: "Готовы оптимизировать ваши телекоммуникационные операции? Обсудим ваши проекты и цели.",
+            contact_phone: "Телефон",
+            contact_name: "Полное имя",
+            contact_name_ph: "Ваше имя",
+            contact_email: "Рабочий email",
+            contact_email_ph: "вы@компания.com",
+            contact_company: "Компания",
+            contact_company_ph: "Название вашей компании",
+            contact_service: "Интересующая услуга",
+            contact_select_service: "Выберите услугу",
+            contact_svc1: "Мониторинг и надзор",
+            contact_svc2: "Тикетинг и ITSM",
+            contact_svc4: "Ценообразование и оптимизация",
+            contact_svc5: "Другой запрос",
+            contact_message: "Ваше сообщение",
+            contact_message_ph: "Опишите ваш проект или потребности...",
+            contact_submit: "Отправить запрос",
+            footer_tagline: '"Соединяем мир. Общение без границ."',
+            footer_copy: "© 2026 A2M Core Operations. Все права защищены.",
+            footer_sub: "Сеть • Голос • Реальный результат",
+            modal_title: "Спасибо!",
+            modal_text: "Ваша заявка успешно отправлена. Мы рассмотрим ваш профиль и свяжемся с вами в ближайшее время.",
+            modal_btn: "Продолжить"
+        }
+    };
+
+    let currentLang = 'fr';
+
+    function setLang(lang) {
+        currentLang = lang;
+        const t = translations[lang];
+        const html = document.documentElement;
+
+        // Update html lang and dir attributes
+        html.setAttribute('lang', lang);
+        html.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+        // Update all text content
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (t[key] !== undefined) {
+                // Handle elements that may contain HTML like copyright
+                if (key === 'footer_copy') {
+                    el.innerHTML = t[key];
+                } else {
+                    el.textContent = t[key];
+                }
+            }
+        });
+
+        // Update placeholders
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            if (t[key] !== undefined) el.placeholder = t[key];
+        });
+
+        // Update lang buttons
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event && event.target && event.target.classList.add('active');
+
+        // Also find by text to set active
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            if (btn.textContent.trim().toLowerCase().startsWith(lang === 'ar' ? 'عر' : lang)) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    // ===== NAVIGATION =====
+    window.addEventListener('scroll', () => {
+        const navbar = document.getElementById('navbar');
+        if (window.scrollY > 50) navbar.classList.add('scrolled');
+        else navbar.classList.remove('scrolled');
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    // ===== FADE IN OBSERVER =====
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                entry.target.querySelectorAll('.stat-number').forEach(el => {
+                    if (!el.classList.contains('animated')) {
+                        animateNumber(el);
+                        el.classList.add('animated');
+                    }
+                });
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ===== NUMBER ANIMATION =====
+    function animateNumber(element) {
+        const target = parseFloat(element.getAttribute('data-target'));
+        const suffix = element.getAttribute('data-suffix') || '';
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                element.textContent = (target % 1 === 0 ? target : target.toFixed(1)) + suffix;
+                clearInterval(timer);
+            } else {
+                element.textContent = (target % 1 === 0 ? Math.floor(current) : current.toFixed(1)) + suffix;
+            }
+        }, 16);
+    }
+
+    // ===== FIREWORKS =====
+    function fireFireworks() {
+        var duration = 3000, animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+        function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    }
+
+    function showSuccessModal() {
+        document.getElementById('successModal').classList.add('active');
+        fireFireworks();
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('successModal').classList.remove('active');
+    }
+
+    // ===== CAREER FORM =====
+    const careerForm = document.getElementById('careerForm');
+    if (careerForm) {
+        careerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = careerForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = (currentLang === 'ar' ? 'جاري الإرسال...' : currentLang === 'ru' ? 'Отправка...' : 'Sending...') + ' <span class="spinner"></span>';
+            submitBtn.disabled = true;
+            const formData = new FormData(careerForm);
+            try {
+                const response = await fetch(careerForm.action, { method: 'POST', body: formData, headers: { 'Accept': 'application/json' } });
+                if (response.ok) { showSuccessModal(); careerForm.reset(); }
+                else alert(currentLang === 'ar' ? 'حدث خطأ، يرجى المحاولة لاحقًا.' : currentLang === 'ru' ? 'Произошла ошибка. Попробуйте позже.' : 'Une erreur est survenue. Veuillez réessayer plus tard.');
+            } catch (error) {
+                alert(currentLang === 'ar' ? 'خطأ في الاتصال.' : currentLang === 'ru' ? 'Ошибка соединения.' : 'Erreur de connexion.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // ===== MOBILE MENU =====
+    function toggleMenu() {
+        const navLinks = document.querySelector('.nav-links');
+        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    // Initialize with French
+    setLang('fr');
+    </script>
+</body>
+</html>
